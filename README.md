@@ -1,187 +1,251 @@
-# README for the elliptic multiscale finite element code
+# README for the multiscale finite element MATLAB codes
 
-This archive contains the MATLAB code corresponding primarily to:
+This package documents the uploaded MATLAB codes associated with the following three papers:
 
-**Exponential Convergence for Multiscale Linear Elliptic PDEs via Adaptive Edge Basis Functions**  
-Yifan Chen, Thomas Y. Hou, Yixuan Wang  
-arXiv:2007.07418
+1. **Exponential Convergence for Multiscale Linear Elliptic PDEs via Adaptive Edge Basis Functions**  
+   Yifan Chen, Thomas Y. Hou, Yixuan Wang  
+   arXiv:2007.07418
 
-It is also part of the broader ExpMsFEM framework summarized in:
+2. **Exponentially convergent multiscale methods for high frequency heterogeneous Helmholtz equations**  
+   Yifan Chen, Thomas Y. Hou, Yixuan Wang  
+   arXiv:2105.04080
 
-**Exponentially Convergent Multiscale Finite Element Method**  
-arXiv:2212.00823
+3. **Exponentially Convergent Multiscale Finite Element Method**  
+   Yifan Chen, Thomas Y. Hou, Yixuan Wang  
+   arXiv:2212.00823
 
-## What this code does
+## How the uploaded code maps to the three papers
 
-The code implements multiscale finite element methods for second-order linear elliptic PDEs with rough coefficients. The core workflow is:
+The uploaded material is organized into **two** MATLAB archives:
 
-1. solve a fine-grid reference problem using `FEM.m`
-2. solve a reduced multiscale problem using `MsFEM.m`
-3. compare the two solutions in relative `L2`-type and energy-type norms
+- `elliptic.zip` -> code for the **elliptic** multiscale framework of arXiv:2007.07418
+- `helmholtz.zip` -> code for the **Helmholtz** multiscale framework of arXiv:2105.04080
 
-The experiment folders are organized by **coefficient family** and **basis construction strategy**.
+The 2022 paper arXiv:2212.00823 is a **concise review / synthesis** of the exponentially convergent multiscale finite element method (ExpMsFEM) covering both the elliptic and Helmholtz settings. There is **no separate third archive** in the upload; instead, the two codebases together serve as the computational companion to that review.
 
-## Archive layout
+## Language and environment
+
+The codes are written in **MATLAB** and organized as small self-contained experiment folders.
+
+Typical requirements:
+
+- MATLAB with sparse linear algebra support
+- No PDE toolbox is required by the core scripts
+- Optional: the random-coefficient generator `rando.m` uses `gmdistribution`, so regenerating the random medium may require the **Statistics and Machine Learning Toolbox**
+
+## Recommended workflow
+
+For most experiments:
+
+1. Open MATLAB.
+2. Change into one experiment folder.
+3. Run `main.m`.
+
+Examples:
+
+```matlab
+cd('code/periodic/Exp')
+main
+```
+
+```matlab
+cd('Code/case1/Exp')
+main
+```
+
+Many experiments:
+
+- compute a fine-grid reference solution with `FEM.m`
+- compute a multiscale approximation with `MsFEM.m`
+- report relative errors in `L2`-type and energy-type norms
+- save results to `.mat` files
+
+Some `main.m` files already save outputs, while others have the `save(...)` line commented out; if you want persistent results, simply uncomment or edit the relevant line.
+
+## High-level organization
+
+### 1. Elliptic code (`elliptic.zip`)
+
+Main root inside the archive:
 
 ```text
 code/
-|- periodic/
-|  |- O(H)/
-|  |- H+bubble/
-|  |- Exp/
-|  \- Nodal/
-|- Random/
-|  |- H+bubble/
-|  \- Exp/
-|- Highcontrast/
-|  |- H+bubble/
-|  \- Exp/
-\- ... additional folders named "copy", which are duplicate working snapshots
 ```
 
-### Main coefficient families
+Main benchmark families:
 
-- `periodic/`  
-  Oscillatory periodic / multiscale coefficient benchmark.
+- `periodic/` - periodic / oscillatory coefficient field
+- `Random/` - random heterogeneous coefficient field
+- `Highcontrast/` - high-contrast inclusions
 
-- `Random/`  
-  Random heterogeneous medium. Some folders load a precomputed coefficient field from `u.mat`. A helper `rando.m` is also included for generating random data.
+Common method subfolders:
 
-- `Highcontrast/`  
-  High-contrast inclusions benchmark.
+- `O(H)/` - baseline low-order coarse approximation
+- `H+bubble/` - harmonic-edge plus bubble enrichment
+- `Exp/` - adaptive edge-basis / exponentially convergent variant
 
-### Main basis families
+Additional notes:
 
-- `O(H)/`  
-  Baseline coarse approximation.
+- folders with names like `copy`, `Exp copy`, `H+bubble copy` appear to be working snapshots or alternate runs
+- `Nodal/` under `periodic/` is an auxiliary reference implementation rather than the main experiment entry point
 
-- `H+bubble/`  
-  Harmonic-edge basis enriched with the bubble part.
+### 2. Helmholtz code (`helmholtz.zip`)
 
-- `Exp/`  
-  Adaptive edge-basis construction giving exponential convergence behavior.
+Main root inside the archive:
 
-- `Nodal/`  
-  Auxiliary nodal reference code; not the main entry point used by the experiments.
-
-## Recommended starting points
-
-To reproduce the main reported trends, start with the folders **without** `copy` in the name:
-
-```matlab
-cd('code/periodic/Exp'); main
-cd('code/periodic/H+bubble'); main
-cd('code/periodic/O(H)'); main
-
-cd('code/Random/Exp'); main
-cd('code/Random/H+bubble'); main
-
-cd('code/Highcontrast/Exp'); main
-cd('code/Highcontrast/H+bubble'); main
+```text
+Code/
 ```
 
-## Typical experiment parameters
+Main benchmark families:
 
-Most `main.m` files define:
+- `case1/`, `case2/`, `case3/`, `case4/` - four main Helmholtz test families
+- `HIgh wavenumber/` - fine-grid FEM driver for a high-wavenumber Robin-boundary test
+- `Mie/` - fine-grid FEM driver for a Mie-type heterogeneous benchmark
+
+Common method subfolders inside each case:
+
+- `H+bubble/` - bubble-enriched multiscale basis
+- `Exp/` - exponentially convergent edge-basis variant
+- `H+bubble_conj/`, `Exp_conj/` - conjugate/adjoint-enriched variants used in the Helmholtz experiments
+- `Nodal_can_be_regarded_as_H+bubble_when_N_e=0/` - nodal reference implementation
+
+Additional notes:
+
+- folders named `case1 copy`, `case2 copy`, etc. look like duplicated working snapshots
+- the capitalization `HIgh wavenumber` is preserved from the original files
+
+## Common file roles
+
+Across both archives, the same naming pattern appears repeatedly.
+
+- `main.m`  
+  Experiment driver. Usually sets mesh parameters, wavenumber if needed, calls `FEM` and `MsFEM`, and computes relative errors.
+
+- `FEM.m`  
+  Fine-grid reference finite element solver.
+
+- `MsFEM.m`  
+  Multiscale solver for the corresponding basis family.
+
+- `elementstiff*.m`  
+  Local stiffness / load assembly on elements or coarse patches.
+
+- `basefun.m`, `basefun1.m`  
+  Local basis construction utilities.
+
+- `harmext.m`  
+  Harmonic extension component.
+
+- `bubble.m`  
+  Bubble-part construction.
+
+- `restrict.m`  
+  Restriction / edge data handling.
+
+- `loc2glo.m` and `cellVertices.m`  
+  Mesh indexing and geometry utilities.
+
+- `afun.m`, `ffun.m`  
+  Coefficient and forcing definitions.
+
+For Helmholtz, there are additional coefficient files:
+
+- `betafun.m` - boundary / Robin coefficient
+- `gfun.m` - boundary source term
+- `vfun.m` - reaction / refractive-index type coefficient
+- `bc.m` - boundary indexing helper
+
+## Reproducing the main experiments
+
+### Elliptic experiments
+
+Suggested entry points:
+
+- `code/periodic/O(H)/main.m`
+- `code/periodic/H+bubble/main.m`
+- `code/periodic/Exp/main.m`
+- `code/Random/H+bubble/main.m`
+- `code/Random/Exp/main.m`
+- `code/Highcontrast/H+bubble/main.m`
+- `code/Highcontrast/Exp/main.m`
+
+Typical parameters inside `main.m`:
 
 - `N_c` - number of coarse elements per spatial direction
 - `N_f` - number of fine elements per coarse element
-- `i = 1:7` - enrichment level / number of edge basis functions
+- loop index `i = 1:7` - number of edge basis functions / local enrichment level
 
-Example pattern:
-
-```matlab
-N_c = 32;
-N_f = 32;
-[result,K,C] = FEM(N_c*N_f);
-for i = 1:7
-    erro = result - MsFEM(N_c, i, N_f);
-    ...
-end
-```
-
-## Common outputs
-
-Most drivers compute:
+Typical saved outputs:
 
 - `L` - relative `L2`-type error
 - `H` - relative energy-type error
 
-and save them in files such as:
+### Helmholtz experiments
 
-- `eg1_method1_m1to7.mat`
-- `eg1_method2_m1to7.mat`
-- `eg1_method3_m1to7.mat`
-- `eg2_method2_m1to7.mat`
-- `eg2_method3_m1to7.mat`
-- `eg3_method2_m1to7_*.mat`
-- `eg3_method3_m1to7_*.mat`
+Suggested entry points:
 
-The naming convention reflects:
+- `Code/case1/Exp/main.m`
+- `Code/case1/H+bubble/main.m`
+- `Code/case1/Exp_conj/main.m`
+- similarly for `case2`, `case3`, `case4`
 
-- `eg1`, `eg2`, `eg3` -> benchmark family
-- `method1`, `method2`, `method3` -> basis family
-- `m1to7` -> enrichment level sweep
+Typical parameters inside `main.m`:
 
-## Main files in each experiment folder
+- `N_c` - coarse mesh resolution
+- `N_f` - fine elements per coarse element
+- `k0` - wavenumber
+- loop index `i = 1:7` - local edge enrichment level
 
-- `main.m`  
-  Driver script for one benchmark/method pair.
+Remarks:
 
-- `FEM.m`  
-  Fine-grid reference finite element solve.
+- Several Helmholtz `main.m` files have a commented-out `save(...)` command. Uncomment it to store error arrays.
+- `case4` loads coefficient data from `u.mat`, `v.mat`, and `beta.mat`.
+- `HIgh wavenumber/` and `Mie/` do not have a `main.m`; instead, they expose a direct FEM solve through `FEM(N_f, k0)` after editing the coefficient files if desired.
 
-- `MsFEM.m`  
-  Multiscale solve for the selected basis family.
+## How to modify the PDE setup
 
-- `elementstiff.m`, `elementstiff1.m`, `elementstiff2.m`  
-  Local stiffness and load assembly.
+### Elliptic archive
 
-- `basefun.m`, `basefun1.m`  
-  Local basis construction.
+Edit the following files inside a chosen experiment folder:
 
-- `harmext.m`  
-  Harmonic extension.
+- `afun.m` - diffusion coefficient
+- `ffun.m` - right-hand side (when present)
 
-- `bubble.m`  
-  Bubble-part computation.
+Examples included in the archive:
 
-- `restrict.m`  
-  Restriction / edge-data operator.
+- oscillatory periodic coefficients
+- random coefficient fields interpolated from `u.mat`
+- high-contrast inclusion patterns
 
-- `loc2glo.m`, `cellVertices.m`  
-  Mesh indexing and geometry helpers.
+### Helmholtz archive
 
-- `afun.m`  
-  Diffusion coefficient.
+Edit:
 
-- `ffun.m`  
-  Right-hand side, when present.
+- `afun.m` - diffusion / material coefficient
+- `vfun.m` - reaction / refractive coefficient
+- `betafun.m` - Robin boundary coefficient
+- `gfun.m` - boundary source
+- `ffun.m` - interior source term
 
-## Modifying the model problem
+Some cases implement:
 
-To change the PDE setup in a folder, edit:
-
-- `afun.m` to change the coefficient field
-- `ffun.m` to change the forcing term
-
-Examples already present in the archive include:
-
-- highly oscillatory periodic coefficients
-- random media interpolated from a sampled field
+- homogeneous media with oscillatory boundary excitation
+- heterogeneous refractive index fields
 - high-contrast inclusions
+- random media loaded from `.mat` arrays
 
-If you want to regenerate the random coefficient rather than using the provided `u.mat`, inspect `rando.m`. Note that it uses `gmdistribution`, which may require the Statistics and Machine Learning Toolbox.
+## Practical notes
 
-## Notes
+- Many folders are duplicated with names containing `copy`. For a clean starting point, use the folders **without** `copy` in the name.
+- Several scripts create figures with `surf(...)`; if you are running in batch mode, you may want to disable plotting.
+- The codes are written as experiment scripts rather than as a packaged library, so each folder is intended to be run independently.
+- Relative path assumptions matter: run a script **from inside its own folder** so that local `.mat` files and helper functions are found correctly.
 
-- Run scripts from inside their own folders so that local helper files and `.mat` data are found correctly.
-- Folders with `copy` in the name appear to be alternate snapshots or repeated runs; use them only if you specifically want those variants.
-- Some folders contain plotting utilities such as `plot_a.m` and `myprint.m`.
+## Suggested citation
 
-## Citation
-
-Please cite:
+If you use these codes, please cite the corresponding paper(s):
 
 - arXiv:2007.07418 for the elliptic adaptive edge-basis method
-- arXiv:2212.00823 for the broader ExpMsFEM overview
+- arXiv:2105.04080 for the Helmholtz multiscale method
+- arXiv:2212.00823 for the concise ExpMsFEM review
